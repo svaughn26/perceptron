@@ -50,7 +50,7 @@
       cells.push(cell);
     }
 
-    // === Helper Functions ===
+    //  Perceptron Function
     function sign(z) {
       return z >= 0 ? 1 : -1;
     }
@@ -71,7 +71,7 @@
       return sign(s);
     }
 
-    // === Load Training Data ===
+    //  Load Training Data
     async function loadData() {
       try {
         const response = await fetch('data.json');
@@ -89,7 +89,7 @@
       }
     }
 
-    // === Training ===
+    // Training
     function train() {
       const statusEl = document.getElementById('status');
       const trainBtn = document.getElementById('trainBtn');
@@ -102,7 +102,7 @@
       trainBtn.disabled = true;
       statusEl.innerText = 'Training...';
 
-      // Use setTimeout to allow UI to update
+      
       setTimeout(() => {
         for (let epoch = 0; epoch < EPOCHS; epoch++) {
           let errors = 0;
@@ -126,7 +126,7 @@
       }, 0);
     }
 
-    // === Prediction ===
+    //  Prediction 
     function predictCurrent() {
       const x = getCurrentImage();
       const yHat = predictVec(x);
@@ -134,12 +134,12 @@
       document.getElementById('prediction').innerText = label;
     }
 
-    // === Event Listeners ===
+    // Event Listeners
     document.getElementById('trainBtn').addEventListener('click', train);
     document.getElementById('predictBtn').addEventListener('click', predictCurrent);
     document.getElementById('clearBtn').addEventListener('click', clearGrid);
 
-    // === Initialize ===
+    //  Initialize
     loadData();
   </script>
 </body>
