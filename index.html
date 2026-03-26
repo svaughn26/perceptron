@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>L vs T Perceptron</title>
+  <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><rect width='16' height='16' fill='%23007acc'/></svg>">
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    #grid { display: grid; grid-template-columns: repeat(10, 20px); gap: 2px; margin: 20px 0; }
+    .cell { width: 20px; height: 20px; border: 1px solid #ccc; background: white; cursor: pointer; }
+    .cell.on { background: black; }
+    button { padding: 8px 16px; margin-right: 10px; cursor: pointer; }
+    #status { margin-left: 10px; font-weight: bold; color: green; }
+  </style>
+</head>
+<body>
+  <h1>L vs T Perceptron</h1>
+  
+  <button id="trainBtn">Train Perceptron</button>
+  <span id="status"></span>
+
+  <h2>Draw an image to classify</h2>
+  <div id="grid"></div>
+  <button id="predictBtn">Predict</button>
+  <button id="clearBtn">Clear</button>
+  <div>Prediction: <span id="prediction" style="font-weight:bold; font-size:20px;"></span></div>
+
+  <h3>Perceptron Device</h3>
+  <p>Inputs (pixels) → Weights → Weighted Sum + Bias → sign() → Output (L or T)</p>
+
+  <script>
+    // === Grid Setup ===
+    const SIZE = 10;
+    const N_INPUTS = SIZE * SIZE;
+    const LEARNING_RATE = 0.1;
+    const EPOCHS = 30;
+
+    let data = [];
+    let w = new Array(N_INPUTS).fill(0);
+    let b = 0;
+
+    // Build grid
+    const gridDiv = document.getElementById('grid');
+    const cells = [];
+    for (let i = 0; i < N_INPUTS; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.addEventListener('click', () => cell.classList.toggle('on'));
+      gridDiv.appendChild(cell);
+      cells.push(cell);
+    }
+
+    // === Helper Functions ===
+    function sign(z) {
+      return z >= 0 ? 1 : -1;
+    }
+
+    function getCurrentImage() {
+      return cells.map(c => c.classList.contains('on') ? 1 : 0);
+    }
+
+    function clearGrid() {
+      cells.forEach(c => c.classList.remove('on'));
+    }
+
+    function predictVec(x) {
+      let s = b;
+      for (let i = 0; i < N_INPUTS; i++) {
+        s += w[i] * x[i];
+      }
+      return sign(s);
+    }
+
+    // === Load Training Data ===
+    async function loadData() {
+      try {
+        const response = await fetch('data.json');
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const rawData = await response.json();
+        data = rawData.map(d => ({
+          x: d.x,
+          y: d.label === 'T' ? 1 : -1
+        }));
+        console.log('Loaded', data.length, 'training samples');
+        document.getElementById('status').innerText = `Loaded ${data.length} samples. Ready to train!`;
+      } catch (e) {
+        console.error('Failed to load data.json:', e);
+        document.getElementById('status').innerText = 'Could not load training data.';
+      }
+    }
+
+    // === Training ===
+    function train() {
+      const statusEl = document.getElementById('status');
+      const trainBtn = document.getElementById('trainBtn');
+
+      if (data.length === 0) {
+        statusEl.innerText = 'No training data loaded.';
+        return;
+      }
+
+      trainBtn.disabled = true;
+      statusEl.innerText = 'Training...';
+
+      // Use setTimeout to allow UI to update
+      setTimeout(() => {
+        for (let epoch = 0; epoch < EPOCHS; epoch++) {
+          let errors = 0;
+          for (const sample of data) {
+            const x = sample.x;
+            const y = sample.y;
+            const yHat = predictVec(x);
+            const error = y - yHat;
+            if (error !== 0) {
+              errors++;
+              for (let i = 0; i < N_INPUTS; i++) {
+                w[i] += LEARNING_RATE * error * x[i];
+              }
+              b += LEARNING_RATE * error;
+            }
+          }
+          if (errors === 0) break;
+        }
+        statusEl.innerText = 'Training complete!';
+        trainBtn.disabled = false;
+      }, 0);
+    }
+
+    // === Prediction ===
+    function predictCurrent() {
+      const x = getCurrentImage();
+      const yHat = predictVec(x);
+      const label = yHat === 1 ? 'T' : 'L';
+      document.getElementById('prediction').innerText = label;
+    }
+
+    // === Event Listeners ===
+    document.getElementById('trainBtn').addEventListener('click', train);
+    document.getElementById('predictBtn').addEventListener('click', predictCurrent);
+    document.getElementById('clearBtn').addEventListener('click', clearGrid);
+
+    // === Initialize ===
+    loadData();
+  </script>
+</body>
+</html>

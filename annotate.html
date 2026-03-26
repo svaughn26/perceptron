@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Annotate L vs T</title>
+  <style>
+    #grid { display: grid; grid-template-columns: repeat(10, 20px); gap: 2px; }
+    .cell { width: 20px; height: 20px; border: 1px solid #ccc; background: white; cursor: pointer; }
+    .cell.on { background: black; }
+  </style>
+</head>
+<body>
+  <h1>Annotate L vs T</h1>
+  <div id="grid"></div>
+  <button id="labelL">Save as L</button>
+  <button id="labelT">Save as T</button>
+  <button id="clear">Clear</button>
+  <h3>Dataset (copy this later):</h3>
+  <pre id="output"></pre>
+
+  <script>
+    const size = 10;
+    const grid = document.getElementById('grid');
+    const cells = [];
+    const dataset = [];
+
+    for (let i = 0; i < size * size; i++) {
+      const div = document.createElement('div');
+      div.className = 'cell';
+      div.addEventListener('click', () => {
+        div.classList.toggle('on');
+      });
+      grid.appendChild(div);
+      cells.push(div);
+    }
+
+    function getCurrentImage() {
+      return cells.map(c => c.classList.contains('on') ? 1 : 0);
+    }
+
+    function clearGrid() {
+      cells.forEach(c => c.classList.remove('on'));
+    }
+
+    function saveSample(label) {
+      const x = getCurrentImage();
+      dataset.push({ x, label });
+      document.getElementById('output').textContent = JSON.stringify(dataset, null, 2);
+      clearGrid();
+    }
+
+    document.getElementById('labelL').onclick = () => saveSample('L');
+    document.getElementById('labelT').onclick = () => saveSample('T');
+    document.getElementById('clear').onclick = clearGrid;
+  </script>
+</body>
+</html>
